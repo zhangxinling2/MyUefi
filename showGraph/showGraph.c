@@ -204,14 +204,53 @@ EFI_STATUS BuffBlt(CHAR16 *fileName){
 	FreePool(DataBuffer);
 	return Status;
 }
+
+VOID BresenhamLine(UINTN x1,UINTN y1,UINTN x2,UINTN y2,EFI_GRAPHICS_OUTPUT_BLT_PIXEL *color){
+	INTN d,dx,dy,dx2,dy2,dxy;
+	INTN xinc,yinc;
+	dx=(INTN)((x2>x1)?(x2-x1):(x1-x2));//计算x差值
+	dx2=dx<<1;						   //左移一位，x差值乘2
+	dy=(INTN)((y2>y1)?(y2-y1):(y1-y2));//计算y差值
+	dy2=dy<<2;						   //左移一位，y差值乘2
+	xinc=(x2>x1)?1:((x2==x1)?0:-1);	   //目标地大于起始地则返回1，持平则返回0，小于则返回-1
+	yinc=(y2>y1)?1:((y2==y1)?0:-1);
+	putpixel(x1,y1,color);			   //画出起始点
+	Print(L"put thr first point\n");
+	if(dx>dy){						   //斜率小于1
+		d=dy2-dx;					   //确定第一步决策参数
+		dxy=dy2-dx2;				   //决策参数中的常数  决策参数为pk+1=pk+2(dy-dx)
+		while (dx--)
+		{
+			if(d<0) d+=dy2;			   //上一步决策参数小于0时的公式
+			else{					   //大于0时的公式
+				d+=dxy;
+				y1+=yinc;
+			}
+			putpixel(x1+=xinc,y1,color);
+		}
+	}else{
+		d=dx2-dy;					   
+		dxy=dx2-dy2;				   
+		while (dy--)
+		{
+			if(d<0) d+=dx2;			   
+			else{					   
+				d+=dxy;
+				x1+=xinc;
+			}
+			putpixel(x1,y1+=yinc,color);
+		}
+	}
+}
 INTN
 EFIAPI
 ShellAppMain (
   IN UINTN Argc,
   IN CHAR16 **Argv
   ){
-	  EFI_STATUS Status;
-	  Status = BuffBlt(Argv[1]);
+	  //EFI_STATUS Status;
+	  //Status = BuffBlt(Argv[1]);
 	  //Status=ShowBMP256(Argv[1],0,0);
+	  BresenhamLine(0,0,80,80,0);
 	  return 0;
 }
