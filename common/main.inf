@@ -1,0 +1,84 @@
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = common
+  FILE_GUID                      = 6987936E-ED34-44db-AE97-1FA5E4ED2117
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    =ShellCEntryLib
+#  C_FLAGS			 = -I../Software/Foundation/Include
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]  
+  BMP.h
+  BMP.c
+  common.h
+  common.c
+  FileRW.h
+  FileRW.c
+  Graphic.h
+  Graphic.c
+  example.uni
+  HiiFont.h
+  HiiFont.c
+  Keyboard.h
+  Keyboard.c
+  Window.h
+  Window.c
+  HiiChs.c
+  FontData.c
+[Packages]
+
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ShellPkg/ShellPkg.dec
+  
+[LibraryClasses]
+ShellCEntryLib
+  UefiApplicationEntryPoint
+  UefiLib
+  PcdLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  BaseLib
+  BaseBmpSupportLib
+  UefiShellLib
+  DxeServicesLib
+	DevicePathLib
+  UefiHiiServicesLib
+[Protocols]
+  gEfiUnicodeCollation2ProtocolGuid                       # ALWAYS_CONSUMED
+  gEfiDevicePathProtocolGuid                              # ALWAYS_CONSUMED
+  gEfiLoadedImageProtocolGuid                             # ALWAYS_CONSUMED
+  gEfiSimpleFileSystemProtocolGuid                        # ALWAYS_CONSUMED
+  gEfiDevicePathToTextProtocolGuid                        # ALWAYS_CONSUMED
+  gEfiHiiConfigAccessProtocolGuid
+  gEfiPlatformDriverOverrideProtocolGuid
+  gEfiBlockIoProtocolGuid                                 ## TO_START
+  gEfiDriverBindingProtocolGuid
+  gEfiComponentNameProtocolGuid    
+  gEfiDiskIoProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiSimplePointerProtocolGuid
+  gEfiSimpleTextInputExProtocolGuid
+	gEfiPciRootBridgeIoProtocolGuid  ## BY_START
+  
+[FeaturePcd]
+
+[Pcd.common]
+  gEfiMdePkgTokenSpaceGuid.PcdUefiVariableDefaultPlatformLang
+  gEfiMdePkgTokenSpaceGuid.PcdUefiVariableDefaultPlatformLangCodes
+  
+[Guids]
+  gEfiFileSystemInfoGuid
+  gEfiFileInfoGuid
+[BuildOptions]
+MSFT:*_*_*_CC_FLAGS = /utf-8
