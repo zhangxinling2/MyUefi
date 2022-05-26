@@ -87,25 +87,22 @@ VOID getpixel(UINTN x,UINTN y, EFI_GRAPHICS_OUTPUT_BLT_PIXEL *color)
 {
 	gGraphicsOutput->Blt (gGraphicsOutput,color,EfiBltVideoToBltBuffer,x,y,0,0,1,1,0);
 }
-/**
- * @brief draw line
- * @param (x1,y1) -> (x2,y2)
- * @param *color  color
- * @return  void
- */
-/*使用Bresenham算法*/
-VOID line(UINTN x1,UINTN y1,UINTN x2,UINTN y2,EFI_GRAPHICS_OUTPUT_BLT_PIXEL *color)
+
+VOID Line(UINTN x1, UINTN y1, UINTN x2, UINTN y2, EFI_GRAPHICS_OUTPUT_BLT_PIXEL *color)
 {
+	/*使用Bresenham算法*/
 	INTN d,dx,dy,dx2,dy2,dxy;
 	INTN xinc,yinc;
 
-	dx=(INTN)((x2>x1)?(x2-x1):(x1-x2));
-	dx2=dx<<1;
-	dy=(INTN)((y2>y1)?(y2-y1):(y1-y2));
-	dy2=dy<<1;
-	xinc=(x2>x1)?1:((x2==x1)?0:(-1));
-	yinc=(y2>y1)?1:((y2==y1)?0:(-1));
-	putpixel(x1,y1,color);
+	
+	/* 参数准备 */
+	dx = (INTN)((x2 > x1) ? (x2 - x1) : (x1 - x2));
+	dx2 = dx << 1;
+	dy = (INTN)((y2 > y1) ? (y2 - y1) : (y1 - y2));
+	dy2 = dy << 1;
+	xinc =(INTN) (x2 > x1) ? 1 : ((x2 == x1) ? 0 : (-1));
+	yinc = (INTN)(y2 > y1) ? 1 : ((y2 == y1) ? 0 : (-1));
+	putpixel(x1, y1, color);
 	if(dx>=dy){
 		d=dy2-dx;
 		dxy=dy2-dx2;
@@ -116,7 +113,7 @@ VOID line(UINTN x1,UINTN y1,UINTN x2,UINTN y2,EFI_GRAPHICS_OUTPUT_BLT_PIXEL *col
 				y1+=yinc;
 			}
 			// if(((x1+xinc)<=maxX)&&(y1<=maxY))			/* 对超出屏幕范围的点不予显示 */
-			putpixel(x1+=xinc,y1,color);
+				putpixel(x1+=xinc,y1,color);
 		}
 	}
 	else{
@@ -129,7 +126,7 @@ VOID line(UINTN x1,UINTN y1,UINTN x2,UINTN y2,EFI_GRAPHICS_OUTPUT_BLT_PIXEL *col
 				x1+=xinc;
 			}
 			// if((x1<=maxX)&&((y1+yinc)<=maxY))			/* 对超出屏幕范围的点不予显示 */
-			putpixel(x1,y1+=yinc,color);
+				putpixel(x1,y1+=yinc,color);
 		}
 	}
 }
@@ -247,6 +244,95 @@ VOID  circle(UINTN centerx,UINTN centery,UINTN radius,EFI_GRAPHICS_OUTPUT_BLT_PI
   putpixel(centerx-y,centery-y,color);
   putpixel(centerx-y,centery+y,color);
 }   
+
+VOID getRectImage(IN UINTN x1,IN UINTN y1,UINTN Width,UINTN Height ,IN OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ImageBuffer){
+	gGraphicsOutput->Blt(gGraphicsOutput,ImageBuffer,EfiBltVideoToBltBuffer,x1,y1,0,0,Width,Height,0);
+}
+
+VOID putRectImage(IN UINTN x1,IN UINTN y1,UINTN Height,UINTN Width ,IN OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ImageBuffer){
+	gGraphicsOutput->Blt(gGraphicsOutput,ImageBuffer,EfiBltBufferToVideo,x1,y1,0,0,Width,Height,0);
+}
+//Description: x1,y1：屏幕上显示图像左上角的起始位置； Width,Height: 图像本身的大小；
+//             distanceX,distanceY:距离图像左上角的位置的坐标；partWidth,partHeight:需要显示部分图像的大小
+//             ImageBuffer: 图像像素的内容
+VOID putPartRectImage(IN UINTN x1,IN UINTN y1,IN UINTN Width,IN UINTN Height,IN UINTN distanceX,IN UINTN distanceY,IN UINTN partWidth,IN UINTN partHeight,IN EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ImageBuffer){
+	UINTN realPartWidth,realPartHeight;
+	if(distanceX>Width-1)
+		return;
+	if(distanceY>Height-1)//超出图像范围不显示
+		return;
+	if((distanceX+partWidth)>(Width-1))//计算真实显示图像大小
+		realPartWidth = Width-1 - distanceX +1;
+	else
+		realPartWidth = partWidth;
+	if((distanceY+partHeight)>(Height-1))
+		realPartHeight = Height-1-distanceY+1;
+	else
+		realPartHeight=partHeight;
+	//BltBuffer中某个子矩形被使用，咋Delta代表图形宽度所包含的字节数
+	gGraphicsOutput->Blt(gGraphicsOutput,ImageBuffer,EfiBltBufferToVideo,distanceX,distanceY,x1+distanceX,y1+distanceY,realPartWidth,realPartHeight,Width* sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+}
+//对图像缓冲器的指定位置点进行绘图，imgX,imgY是相对于图像左上角位置的坐标
+VOID putImagePixel(IN UINTN x,IN UINTN y,IN UINTN Width,IN UINTN Height,IN UINTN imgX,IN UINTN imgY,IN EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ImageBuffer){
+	EFI_GRAPHICS_OUTPUT_BLT_PIXEL color;
+	if(imgX>Width-1)
+		return;
+	if(imgY>Height-1)
+		return;
+	color = ImageBuffer[imgY * Width + imgX];
+	putpixel(x + imgX, y + imgY, &color);
+}
+
+//Description:图像内画线函数
+VOID putImageLine(IN UINTN x,IN UINTN y,IN UINTN Width,IN UINTN Height,
+			IN UINTN imageX1,IN UINTN imageY1, IN UINTN imageX2,IN UINTN imageY2,
+			UINTN maxX, UINTN maxY,IN EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ImageBuffer)
+{
+		/*使用Bresenham算法*/
+	INTN d,dx,dy,dx2,dy2,dxy;
+	INTN xinc,yinc;
+	INTN x1, x2, y1, y2;
+
+	x1 = (INTN)(imageX1);
+	y1 = (INTN)(imageY1);
+	x2 = (INTN)(imageX2);
+	y2 = (INTN)(imageY2);
+
+	/* 参数准备 */
+	dx = (INTN)((x2 > x1) ? (x2 - x1) : (x1 - x2));
+	dx2 = dx << 1;
+	dy = (INTN)((y2 > y1) ? (y2 - y1) : (y1 - y2));
+	dy2 = dy << 1;
+	xinc =(INTN) (x2 > x1) ? 1 : ((x2 == x1) ? 0 : (-1));
+	yinc = (INTN)(y2 > y1) ? 1 : ((y2 == y1) ? 0 : (-1));
+	putImagePixel(x, y, Width,Height,x1,y1,ImageBuffer);
+	if(dx>=dy){
+		d=dy2-dx;
+		dxy=dy2-dx2;
+		while(dx--){
+			if(d<=0)d+=dy2;
+			else{
+				d+=dxy;
+				y1+=yinc;
+			}
+			if(((x1+xinc)<=(INTN)(maxX))&&(y1<=(INTN)maxY))			/* 对超出屏幕范围的点不予显示 */
+				putImagePixel(x, y, Width,Height,x1+=xinc,y1,ImageBuffer);
+		}
+	}
+	else{
+		d=dx2-dy;
+		dxy=dx2-dy2;
+		while(dy--){
+			if(d<=0)d+=dx2;
+			else{
+				d+=dxy;
+				x1+=xinc;
+			}
+			if((x1<=(INTN)maxX)&&((y1+yinc)<=(INTN)maxY))			/* 对超出屏幕范围的点不予显示 */
+				putImagePixel(x, y, Width,Height,x1,y1+=yinc,ImageBuffer);
+		}
+	}
+}
 //Function Name: SetBKG
 //Input: color
 //Output: None

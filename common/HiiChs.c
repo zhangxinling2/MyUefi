@@ -42,10 +42,10 @@ ShellAppMain (
   )
 {
 	UINT64 flag;
-	// const CHAR16* TestStr0=(const CHAR16 *)L"SimpleFont: 举杯邀明月，对影成三人。";
-	// const CHAR16* TestStr1=(const CHAR16 *)L"012345ABCabc";
-	//const CHAR16* TestStr2=(const CHAR16 *)L"Font: 我歌月徘徊，我舞影零乱。";
-	//const CHAR16* TestStr3=(const CHAR16 *)L"012345ABCabc";
+	const CHAR16* TestStr0=(const CHAR16 *)L"SimpleFont: 举杯邀明月，对影成三人。";
+	const CHAR16* TestStr1=(const CHAR16 *)L"012345ABCabc";
+	const CHAR16* TestStr2=(const CHAR16 *)L"Font: 我歌月徘徊，我舞影零乱。";
+	const CHAR16* TestStr3=(const CHAR16 *)L"012345ABCabc";
     
 	flag=InintGloabalProtocols(S_TEXT_INPUT_EX|GRAPHICS_OUTPUT|HII_FONT);
 	Print(L"flag=%x\n",flag);
@@ -55,17 +55,22 @@ ShellAppMain (
 	LoadSimpleFont();
 	
 	TestStrPackage();
+	Print(L"你好UEFI!\n");
+	Print(L"Экспорт  Русский\n");
+	Print(L"???\n");
+	
+	Print(L"???\n");
+	Print(L"???\n");
 	// //进入图形模式，并设置背景
 	//SwitchGraphicsMode(TRUE);
 	// SetBKG(&(gColorTable[3]));
 	// WaitKey();
-	// //显示汉字和其他字符
-	// putHiiFontStr(5,0,(CHAR16*)TestStr0,NULL,&(gColorTable[WHITE]),&(gColorTable[DARKBLACK]));
-	// putHiiFontStr(5,21,(CHAR16*)TestStr1,NULL,&(gColorTable[DARKBLACK]),&(gColorTable[LIGHTBLACK]));
-	// putHiiFontStr(5,50,(CHAR16*)TestStr2,(CHAR16*)L"LUOBING",&(gColorTable[WHITE]),&(gColorTable[DARKBLACK]));
-	// putHiiFontStr(5,71,(CHAR16*)TestStr3,(CHAR16*)L"LUOBING",&(gColorTable[DARKBLACK]),&(gColorTable[LIGHTBLACK]));
+	//显示汉字和其他字符
+	putHiiFontStr(5,0,(CHAR16*)TestStr0,NULL,&(gColorTable[WHITE]),&(gColorTable[DARKBLACK]));
+	putHiiFontStr(5,21,(CHAR16*)TestStr1,NULL,&(gColorTable[DARKBLACK]),&(gColorTable[LIGHTBLACK]));
+	putHiiFontStr(5,50,(CHAR16*)TestStr2,(CHAR16*)L"LUOBING",&(gColorTable[WHITE]),&(gColorTable[DARKBLACK]));
+	putHiiFontStr(5,71,(CHAR16*)TestStr3,(CHAR16*)L"LUOBING",&(gColorTable[DARKBLACK]),&(gColorTable[LIGHTBLACK]));
 	// WaitKey();
-	Print((const CHAR16*)L"显示文字\n");
 	// SetMyMode(0x0);
 	// SwitchGraphicsMode(FALSE);
 

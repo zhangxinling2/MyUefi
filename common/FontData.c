@@ -9,3 +9,4 @@
 #include <Protocol/HiiFont.h>
 #include "example.data"
 #include "MyFontGlyph.c"
+#include "Russian.c"

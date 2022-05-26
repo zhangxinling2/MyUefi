@@ -9,7 +9,8 @@ extern UINT32 gSimpleFontWideBytes;
 extern EFI_NARROW_GLYPH gSimpleFontNarrowGlyphData[];
 extern UINT32 gSimpleFontNarrowBytes;
 static EFI_GUID gSimpleFontPackageListGuid = {0xf6643673, 0x6006, 0x3c38, {0x5c, 0xcd, 0xda, 0x1a, 0xeb, 0x3b, 0x26, 0xa2}};
-
+extern EFI_NARROW_GLYPH gRussianNarrowGlyphData[];
+extern UINT32 nRussianNarrowGlyphSize;
 //Font
 extern EFI_WIDE_GLYPH gDMFontWideGlyphData[];
 extern UINT32 gDMFontBytes;
@@ -62,7 +63,8 @@ EFI_STATUS TestString(EFI_HANDLE HiiHandle)
 {
     EFI_STATUS Status = 0;
     //CHAR8* BestLanguage = "en-US";
-    CHAR8 *BestLanguage = "zh-Hans";
+    //CHAR8 *BestLanguage = "zh-Hans";
+    CHAR8 *BestLanguage = "ru-RU";
     EFI_STRING TempString = NULL;
     UINTN StringSize = 0;
     Status = gHiiString->GetString(
@@ -114,13 +116,11 @@ EFI_STATUS CreateSimpleFontPkg(EFI_NARROW_GLYPH *NarrowGlyph, UINT32 nNarrow, EF
     UINT8 *Package;
     UINT8 *Location = NULL;
     UINT32 packageLen = sizeof(EFI_HII_SIMPLE_FONT_PACKAGE_HDR) + nNarrow + nWide + 4;
-
     Package = (UINT8 *)AllocateZeroPool(packageLen);
     WriteUnaligned32((UINT32 *)Package, packageLen);
     simpleFont = (EFI_HII_SIMPLE_FONT_PACKAGE_HDR *)(Package + 4);
     simpleFont->Header.Length = (UINT32)(packageLen - 4);
     simpleFont->Header.Type = EFI_HII_PACKAGE_SIMPLE_FONTS;
-    // simpleFont->NumberOfNarrowGlyphs = 0;
     simpleFont->NumberOfNarrowGlyphs = (UINT16)(nNarrow / sizeof(EFI_NARROW_GLYPH));
     simpleFont->NumberOfWideGlyphs = (UINT16)(nWide / sizeof(EFI_WIDE_GLYPH));
     Location = (UINT8 *)(&simpleFont->NumberOfWideGlyphs + 1); //放到此处赋值，需要对齐
@@ -156,7 +156,8 @@ EFI_STATUS LoadSimpleFont(void)
     handles = HiiGetHiiHandles(&gSimpleFontPackageListGuid);
     if (handles == 0)
     {
-        Status = CreateSimpleFontPkg(gSimpleFontNarrowGlyphData, gSimpleFontNarrowBytes, gSimpleFontWideGlyphData, gSimpleFontWideBytes);
+        //Status = CreateSimpleFontPkg(gSimpleFontNarrowGlyphData, gSimpleFontNarrowBytes, gSimpleFontWideGlyphData, gSimpleFontWideBytes);
+        Status = CreateSimpleFontPkg(gRussianNarrowGlyphData, nRussianNarrowGlyphSize, gSimpleFontWideGlyphData, gSimpleFontWideBytes);
         Print(L"LoadSimpleFont:CreateSimpleFontPkg= %r\n", Status);
         //gST->ConOut->OutputString(gST->ConOut,L"execute CreatesimpleFontPkg()  handles==0\n\r");
         //return Status;
@@ -230,7 +231,7 @@ EFI_STATUS CreateMyFontPkg(CHAR16 *FontName, UINT16 FontWidth, UINT16 FontHeight
     FontPkgHeader->Header.Length = (UINT32)(PackageLength - 4);             //包长度
     FontPkgHeader->Header.Type = EFI_HII_PACKAGE_FONTS;                     //设置类型
     FontPkgHeader->HdrSize = sizeof(EFI_HII_FONT_PACKAGE_HDR) + FontNameLen;    //Font包头加字体名称的大小作为包头大小
-    FontPkgHeader->GlyphBlockOffset = sizeof(EFI_HII_FONT_PACKAGE_HDR) + FontNameLen;   //上一个大小即为偏移量，指向第一个UNICODE字符
+    FontPkgHeader->GlyphBlockOffset = sizeof(EFI_HII_FONT_PACKAGE_HDR) + FontNameLen;   //偏移量，偏移量后指向第一个UNICODE字符
     FontPkgHeader->Cell = Cell;
     FontPkgHeader->FontStyle = EFI_HII_FONT_STYLE_NORMAL;                   //字体风格
     CopyMem((FontPkgHeader->FontFamily), FontName, FontNameLen);            //字体名称
@@ -306,11 +307,11 @@ EFI_STATUS FillNarrowGLYPH(UINT8 *p, EFI_NARROW_GLYPH *NarrowGlyph, UINT32 SizeI
     // SKIP  
     if (Next != NrStart)
     {
-        EFI_HII_GIBT_SKIP2_BLOCK *FontSkip2Block = (EFI_HII_GIBT_SKIP2_BLOCK *)p;     //设置EFI_HII_GIBT_SKIP2_BLOCK 因为是连续存储所以直接将p强转为块
+        EFI_HII_GIBT_SKIP2_BLOCK *FontSkip2Block = (EFI_HII_GIBT_SKIP2_BLOCK *)p;                   //设置EFI_HII_GIBT_SKIP2_BLOCK 因为是连续存储所以直接将p强转为块
         FontSkip2Block->Header.BlockType = (UINT8)EFI_HII_SIBT_SKIP2;
         FontSkip2Block->SkipCount = NrStart - Next;
 
-        p = (UINT8 *)(FontSkip2Block + 1);                          //p继续指向块后指针
+        p = (UINT8 *)(FontSkip2Block + 1);                          //p继续指向块后
         Length += sizeof(EFI_HII_GIBT_SKIP2_BLOCK);                 //长度加上块长
     }
 
@@ -325,7 +326,7 @@ EFI_STATUS FillNarrowGLYPH(UINT8 *p, EFI_NARROW_GLYPH *NarrowGlyph, UINT32 SizeI
         UINT16 i = 0, j = 0;
         for (i = 0; i < NrCharNum; i++)         //字符个数
         {
-            for (j = 0; j < 19; j++)            //字符位图 每个字符GlyphCol1数目与字符高度相同  所以需填充19个  因为是8*19/8所以与19相同
+            for (j = 0; j < 19; j++)            //字符位图 每个字符GlyphCol1数目与字符高度相同 所以需填充19个 因为是8*19/8所以与19相同
             {
                 BitmapData[j] = NarrowGlyph[i].GlyphCol1[j];
             }
@@ -440,7 +441,7 @@ EFI_STATUS putHiiFontStr(UINTN x, UINTN y, EFI_STRING String,       //位置和字符
     }
     else
     {                               //使用Font点阵字库
-        fontDisplayInfo = (EFI_FONT_DISPLAY_INFO *)AllocateZeroPool(sizeof(EFI_FONT_DISPLAY_INFO) + StrLen(fontName) * 2 + 2);
+            fontDisplayInfo = (EFI_FONT_DISPLAY_INFO *)AllocateZeroPool(sizeof(EFI_FONT_DISPLAY_INFO) + StrLen(fontName) * 2 + 2);
         fontDisplayInfo->ForegroundColor = *FGColor;
         fontDisplayInfo->BackgroundColor = *BGColor;
         fontDisplayInfo->FontInfoMask = (EFI_FONT_INFO_ANY_FONT | EFI_FONT_INFO_ANY_SIZE);
